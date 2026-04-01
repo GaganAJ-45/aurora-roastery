@@ -1,0 +1,56 @@
+{
+  "name": "aurora-roastery",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@gsap/react": "^2.1.2",
+    "@hookform/resolvers": "^5.2.2",
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "^7.6.0",
+    "@tanstack/react-query": "^5.95.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.20.0",
+    "axios": "^1.14.0",
+    "bcryptjs": "^3.0.3",
+    "chart.js": "^4.5.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "gsap": "^3.14.2",
+    "lenis": "^1.3.21",
+    "lucide-react": "^1.7.0",
+    "next": "16.2.1",
+    "next-auth": "^4.24.13",
+    "pg": "^8.20.0",
+    "prisma": "^7.6.0",
+    "react": "19.2.4",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.72.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  }
+}

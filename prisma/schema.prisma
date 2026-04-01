@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum Category {
+  COFFEE
+  SEASONAL
+  FOOD
+  MERCHANDISE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?
+  image         String?
+  role          Role      @default(USER)
+  points        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  orders        Order[]
+  reviews       Review[]
+  cartItems     CartItem[]
+  rewardHistory RewardHistory[]
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  description   String
+  price         Float
+  image         String
+  category      Category
+  moodTags      String[]
+  intensity     Int       @default(1)
+  isAvailable   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orderItems    OrderItem[]
+  reviews       Review[]
+  cartItems     CartItem[]
+}
+
+model Store {
+  id            String    @id @default(cuid())
+  name          String
+  address       String
+  city          String    @default("Bangalore")
+  hours         String
+  latitude      Float
+  longitude     Float
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orders        Order[]
+}
+
+model CartItem {
+  id            String    @id @default(cuid())
+  userId        String
+  productId     String
+  quantity      Int       @default(1)
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  storeId       String
+  totalAmount   Float
+  status        OrderStatus @default(PENDING)
+  pickupTime    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id])
+  store         Store       @relation(fields: [storeId], references: [id])
+  items         OrderItem[]
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id            String    @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Int
+  price         Float
+
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [id])
+}
+
+model Review {
+  id            String    @id @default(cuid())
+  userId        String
+  productId     String
+  rating        Int
+  comment       String?
+  createdAt     DateTime  @default(now())
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model RewardHistory {
+  id            String    @id @default(cuid())
+  userId        String
+  points        Int
+  description   String
+  createdAt     DateTime  @default(now())
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
