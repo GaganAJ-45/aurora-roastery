@@ -46,19 +46,19 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 sm:py-4 lg:px-8 lg:py-6 transition-all duration-700">
+      <nav className="fixed top-0 left-0 right-0 z-50 px-2 py-2 sm:px-4 sm:py-4 lg:px-8 lg:py-6 transition-all duration-700">
         <motion.div 
            className="pointer-events-none absolute top-0 left-0 h-[2px] bg-amber-500 z-[60]"
            style={{ scaleX: scrollYProgress, transformOrigin: "left" }}
         />
-        <div className="relative z-10 max-w-7xl mx-auto flex items-center justify-between gap-3 bg-black/40 backdrop-blur-3xl border border-white/5 rounded-[1.75rem] lg:rounded-[2.5rem] px-3 py-3 sm:px-4 lg:px-8 lg:py-4 shadow-2xl">
+        <div className="relative z-10 max-w-7xl mx-auto flex items-center justify-between gap-2 bg-black/40 backdrop-blur-3xl border border-white/5 rounded-[1.45rem] sm:rounded-[1.75rem] lg:rounded-[2.5rem] px-2.5 py-2.5 sm:px-4 lg:px-8 lg:py-4 shadow-2xl">
           
-          <Link href="/" className="relative z-20 flex items-center gap-3 group">
+          <Link href="/" className="relative z-20 flex items-center gap-2 sm:gap-3 group min-w-0">
              <div className="pointer-events-none absolute inset-0 bg-amber-500/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-             <div className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center transition-all duration-700 group-hover:rotate-[360deg] group-hover:bg-amber-500 z-10">
-                <Coffee size={24} />
+             <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white text-black rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-700 group-hover:rotate-[360deg] group-hover:bg-amber-500 z-10 flex-shrink-0">
+                <Coffee size={20} className="sm:w-6 sm:h-6" />
              </div>
-             <span className="text-lg sm:text-xl lg:text-2xl font-playfair font-black text-white italic uppercase tracking-tighter leading-none z-10">Aurora</span>
+             <span className="text-base sm:text-xl lg:text-2xl font-playfair font-black text-white italic uppercase tracking-tight sm:tracking-tighter leading-none z-10 truncate">Aurora</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -79,13 +79,13 @@ export default function Navbar() {
              ))}
           </div>
 
-          <div className="relative z-20 flex items-center gap-2 sm:gap-3 lg:gap-6">
+          <div className="relative z-20 flex items-center gap-1.5 sm:gap-3 lg:gap-6">
             {/* Cart Button */}
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="relative min-h-[44px] min-w-[44px] p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white transition-all group"
+              className="relative min-h-[42px] min-w-[42px] sm:min-h-[44px] sm:min-w-[44px] p-2.5 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl sm:rounded-2xl text-white transition-all group"
             >
-              <ShoppingBag size={20} className="group-hover:scale-110 transition-transform" />
+              <ShoppingBag size={18} className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-lg border-2 border-black">
                   {totalItems}
@@ -100,11 +100,11 @@ export default function Navbar() {
                  onClick={() => setIsProfileOpen(!isProfileOpen)}
                  className={`flex items-center gap-2 rounded-[1.1rem] lg:rounded-[1.35rem] border transition-all ${
                    session
-                     ? 'bg-gradient-to-r from-white/6 via-white/4 to-amber-500/10 border-white/10 hover:border-amber-500/30 hover:bg-white/10 pl-2 pr-2.5 py-2 lg:pr-3 shadow-[0_10px_40px_rgba(0,0,0,0.25)] min-h-[44px]'
-                     : 'p-1.5 bg-white/5 border-white/10 rounded-2xl hover:bg-white/10 min-h-[44px]'
+                     ? 'bg-gradient-to-r from-white/6 via-white/4 to-amber-500/10 border-white/10 hover:border-amber-500/30 hover:bg-white/10 pl-1.5 pr-2 py-1.5 sm:pl-2 sm:pr-2.5 sm:py-2 lg:pr-3 shadow-[0_10px_40px_rgba(0,0,0,0.25)] min-h-[42px] sm:min-h-[44px]'
+                     : 'p-1.5 bg-white/5 border-white/10 rounded-xl sm:rounded-2xl hover:bg-white/10 min-h-[42px] sm:min-h-[44px]'
                  }`}
                >
-                 <div className="w-8 h-8 rounded-[14px] bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-black shadow-xl overflow-hidden">
+                 <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-[12px] sm:rounded-[14px] bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-black shadow-xl overflow-hidden">
                    {session?.user?.image ? (
                      <img src={session.user.image} alt="" className="w-full h-full object-cover" />
                    ) : (
@@ -125,7 +125,7 @@ export default function Navbar() {
                      </span>
                    </div>
                  )}
-                 <ChevronDown size={14} className={`text-white/30 transition-transform duration-500 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                 <ChevronDown size={12} className={`text-white/30 transition-transform duration-500 ${isProfileOpen ? 'rotate-180' : ''}`} />
                </button>
 
                <AnimatePresence>
@@ -226,10 +226,10 @@ export default function Navbar() {
             </div>
 
             <button 
-              className="lg:hidden min-h-[44px] min-w-[44px] p-3 bg-white/5 rounded-2xl text-white"
+              className="lg:hidden min-h-[42px] min-w-[42px] sm:min-h-[44px] sm:min-w-[44px] p-2.5 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl text-white"
               onClick={() => setIsOpen(!isOpen)}
             >
-              {isOpen ? <X size={20} /> : <MenuIcon size={20} />}
+              {isOpen ? <X size={18} className="sm:w-5 sm:h-5" /> : <MenuIcon size={18} className="sm:w-5 sm:h-5" />}
             </button>
           </div>
         </div>

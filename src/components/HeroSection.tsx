@@ -46,8 +46,9 @@ export default function HeroSection() {
 
   return (
     <section
-      className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-[#0A0705]"
+      className="relative -mt-14 sm:-mt-10 md:mt-0 min-h-[100svh] pt-14 sm:pt-10 md:pt-0 flex items-center justify-center overflow-hidden bg-[#0A0705]"
     >
+      <div className="absolute inset-x-0 top-0 h-28 sm:h-32 bg-gradient-to-b from-black via-black/70 to-transparent z-20 pointer-events-none" />
       {/* Cinematic Layered Background */}
       <motion.div 
         style={{ scale: scrollScale, x: springX, y: springY }}
@@ -70,7 +71,7 @@ export default function HeroSection() {
         style={{ opacity: contentOpacity }}
         className="relative z-30 max-w-5xl px-5 sm:px-8 text-center flex flex-col items-center"
       >
-        <div className="min-h-[8rem] sm:min-h-[10rem] mb-6 sm:mb-8 flex items-center justify-center">
+        <div className="min-h-[7rem] sm:min-h-[10rem] mb-5 sm:mb-8 flex items-center justify-center">
            <AnimatePresence mode="wait">
              <motion.h1
                key={stage}
@@ -78,7 +79,7 @@ export default function HeroSection() {
                animate={{ opacity: 1, y: 0 }}
                exit={{ opacity: 0, y: -20 }}
                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-               className="font-playfair text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white italic tracking-tighter leading-none"
+               className="font-playfair text-[2rem] sm:text-5xl md:text-7xl lg:text-8xl font-black text-white italic tracking-tighter leading-[0.95]"
              >
                {stages[stage]}
              </motion.h1>
@@ -88,7 +89,7 @@ export default function HeroSection() {
         {/* Descriptive Body Copy - only at final stage */}
         <motion.p
           animate={{ opacity: stage === 3 ? 1 : 0, y: stage === 3 ? 0 : 20 }}
-          className="max-w-xl mx-auto text-[rgba(255,255,255,0.6)] text-xs sm:text-sm md:text-base font-medium tracking-[0.16em] sm:tracking-[0.2em] uppercase leading-loose mb-10 sm:mb-16 transition-all duration-1000"
+          className="max-w-xl mx-auto text-[rgba(255,255,255,0.6)] text-[11px] sm:text-sm md:text-base font-medium tracking-[0.12em] sm:tracking-[0.2em] uppercase leading-loose mb-8 sm:mb-16 transition-all duration-1000"
         >
           Specialty coffee, roasted for the discerning ritualist. <br />
           Experience Bangalore&apos;s premier collective.
@@ -101,17 +102,17 @@ export default function HeroSection() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              className="flex flex-col sm:flex-row gap-8 justify-center items-center"
+              className="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center w-full sm:w-auto"
             >
               <Link
                 href="/menu"
-              className="group relative min-h-[44px] px-8 sm:px-12 py-4 sm:py-5 bg-white text-black font-black uppercase tracking-[0.22em] sm:tracking-[0.3em] text-[10px] rounded-2xl hover:bg-amber-500 transition-all duration-500 shadow-2xl active:scale-95 flex items-center gap-4"
+              className="group relative w-full sm:w-auto min-h-[44px] px-8 sm:px-12 py-4 sm:py-5 bg-white text-black font-black uppercase tracking-[0.18em] sm:tracking-[0.3em] text-[10px] rounded-2xl hover:bg-amber-500 transition-all duration-500 shadow-2xl active:scale-95 flex items-center justify-center gap-4"
               >
                 Explore Menu <Coffee size={14} className="group-hover:rotate-12 duration-300" />
               </Link>
               <Link
                 href="/ai-guide"
-              className="group min-h-[44px] px-8 sm:px-12 py-4 sm:py-5 bg-white/5 border border-white/10 text-white font-black uppercase tracking-[0.22em] sm:tracking-[0.3em] text-[10px] rounded-2xl hover:bg-white/10 transition-all duration-500 flex items-center gap-4"
+              className="group w-full sm:w-auto min-h-[44px] px-8 sm:px-12 py-4 sm:py-5 bg-white/5 border border-white/10 text-white font-black uppercase tracking-[0.18em] sm:tracking-[0.3em] text-[10px] rounded-2xl hover:bg-white/10 transition-all duration-500 flex items-center justify-center gap-4"
               >
                 Start Your Ritual <Sparkles size={14} className="text-amber-500" />
               </Link>

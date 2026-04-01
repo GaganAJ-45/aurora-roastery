@@ -9,12 +9,28 @@ const FRAME_COUNT = FRAME_FILENAMES.length;
 const OPENING_HERO_SRC = "/hero_coffee.png";
 const OPENING_SEGMENT_END = 1 / siteConfig.heroScrollTexts.length;
 
+function getMobileScrollText(text: string) {
+  const mobileMap: Record<string, string> = {
+    "BREWED TO\nPERFECTION.": "Brewed to\nPerfection",
+    "From Bean to Perfection": "From Bean to\nPerfection",
+    "Roasted with Precision": "Roasted with\nPrecision",
+    "Ground to Unlock Aroma": "Ground to Unlock\nAroma",
+    "Brewed to Excellence": "Brewed to\nExcellence",
+    "Every Drop Tells a Story": "Every Drop Tells\na Story",
+    "Coffee, Reimagined": "Coffee,\nReimagined",
+    "Begin Your Ritual": "Begin Your\nRitual",
+  };
+
+  return mobileMap[text] ?? text;
+}
+
 export default function ScrollCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [images, setImages] = useState<HTMLImageElement[]>([]);
   const [openingImage, setOpeningImage] = useState<HTMLImageElement | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // 1. Scroll tracking with Spring for ultra-smoothness
   const { scrollYProgress } = useScroll({
@@ -63,6 +79,19 @@ export default function ScrollCanvas() {
     loadImages();
   }, []);
 
+  useEffect(() => {
+    const syncViewport = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+    };
+  }, []);
+
   // 3. Canvas Rendering Logic
   useEffect(() => {
     if (!loaded || !canvasRef.current || images.length === 0) return;
@@ -95,21 +124,30 @@ export default function ScrollCanvas() {
       if (imgRatio > canvasRatio) {
         drawHeight = canvasHeight;
         drawWidth = canvasHeight * imgRatio;
-        offsetX = (canvasWidth - drawWidth) / 2;
+        offsetX = (canvasWidth - drawWidth) / (isMobile ? 1.7 : 2);
         offsetY = 0;
       } else {
         drawWidth = canvasWidth;
         drawHeight = canvasWidth / imgRatio;
         offsetX = 0;
-        offsetY = (canvasHeight - drawHeight) / 2;
+        offsetY = (canvasHeight - drawHeight) / (isMobile ? 3.2 : 2);
       }
 
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
       // Subtle overlay to make text pop
-      ctx.fillStyle = "rgba(10, 7, 5, 0.4)";
+      ctx.fillStyle = isMobile ? "rgba(10, 7, 5, 0.48)" : "rgba(10, 7, 5, 0.4)";
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      if (isMobile) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight * 0.75);
+        gradient.addColorStop(0, "rgba(10, 7, 5, 0.14)");
+        gradient.addColorStop(0.35, "rgba(10, 7, 5, 0.06)");
+        gradient.addColorStop(1, "rgba(10, 7, 5, 0.62)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      }
     };
 
     // Initial render
@@ -128,7 +166,7 @@ export default function ScrollCanvas() {
       unsubscribe();
       window.removeEventListener("resize", handleResize);
     };
-  }, [loaded, images, openingImage, smoothProgress]);
+  }, [isMobile, loaded, images, openingImage, smoothProgress]);
 
   // 4. Text Overlay logic
   const textSegments = siteConfig.heroScrollTexts.map((text, i) => {
@@ -176,6 +214,7 @@ export default function ScrollCanvas() {
             start={start}
             end={end}
             isOpeningFrame={i === 0}
+            isMobile={isMobile}
           />
         ))}
 
@@ -183,7 +222,7 @@ export default function ScrollCanvas() {
         <motion.div
           style={{
             position: "absolute",
-            bottom: "40px",
+            bottom: isMobile ? "72px" : "40px",
             left: "50%",
             translateX: "-50%",
             display: "flex",
@@ -213,12 +252,14 @@ function ScrollText({
   start,
   end,
   isOpeningFrame = false,
+  isMobile = false,
 }: {
   text: string;
   scrollProgress: MotionValue<number>;
   start: number;
   end: number;
   isOpeningFrame?: boolean;
+  isMobile?: boolean;
 }) {
   const fadeWindow = 0.05;
   const opacity = useTransform(
@@ -245,8 +286,8 @@ function ScrollText({
         position: "absolute",
         inset: 0,
         display: "flex",
-        alignItems: isOpeningFrame ? "flex-start" : "center",
-        justifyContent: isOpeningFrame ? "flex-start" : "center",
+        alignItems: isMobile ? "flex-start" : isOpeningFrame ? "flex-start" : "center",
+        justifyContent: isMobile ? "center" : isOpeningFrame ? "flex-start" : "center",
         opacity,
         y,
         scale,
@@ -254,17 +295,19 @@ function ScrollText({
         zIndex: 10,
       }}
     >
-      {isOpeningFrame && (
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+      {(isOpeningFrame || isMobile) && (
+        <div className={`absolute inset-0 ${isMobile ? "bg-gradient-to-b from-black/20 via-black/10 to-black/55" : "bg-gradient-to-r from-black via-black/70 to-transparent"}`} />
       )}
       <h2
         className={
-          isOpeningFrame
-            ? "font-serif whitespace-pre-line text-left uppercase px-8 md:px-16 pt-24 md:pt-32 max-w-[7ch] text-5xl md:text-7xl lg:text-[7.5rem] font-semibold leading-[0.9] tracking-[-0.05em] text-white drop-shadow-[0_0_35px_rgba(0,0,0,0.7)]"
-            : "font-serif gradient-text text-center px-8 text-4xl md:text-7xl lg:text-9xl font-semibold leading-tight tracking-tighter drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]"
+          isMobile
+            ? "font-serif whitespace-pre-line text-center px-6 pt-32 max-w-[11ch] text-[1.95rem] font-semibold leading-[1.08] tracking-[-0.04em] text-[#f2d7b1] drop-shadow-[0_0_28px_rgba(0,0,0,0.9)]"
+            : isOpeningFrame
+              ? "font-serif whitespace-pre-line text-left uppercase px-8 md:px-16 pt-24 md:pt-32 max-w-[7ch] text-5xl md:text-7xl lg:text-[7.5rem] font-semibold leading-[0.9] tracking-[-0.05em] text-white drop-shadow-[0_0_35px_rgba(0,0,0,0.7)]"
+              : "font-serif gradient-text text-center px-8 text-4xl md:text-7xl lg:text-9xl font-semibold leading-tight tracking-tighter drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]"
         }
       >
-        {text}
+        {isMobile ? getMobileScrollText(text) : text}
       </h2>
     </motion.div>
   );
