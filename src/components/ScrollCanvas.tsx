@@ -9,7 +9,9 @@ const FRAME_COUNT = FRAME_FILENAMES.length;
 const OPENING_HERO_SRC = "/hero_coffee.png";
 const OPENING_SEGMENT_END = 1 / siteConfig.heroScrollTexts.length;
 const MOBILE_FRAME_STEP = 4;
+const SMALL_MOBILE_FRAME_STEP = 6;
 const MOBILE_SCROLL_HEIGHT = "320vh";
+const SMALL_MOBILE_SCROLL_HEIGHT = "260vh";
 const DESKTOP_SCROLL_HEIGHT = "500vh";
 
 function getMobileScrollText(text: string) {
@@ -35,6 +37,7 @@ export default function ScrollCanvas() {
   const [openingImage, setOpeningImage] = useState<HTMLImageElement | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
 
   // 1. Scroll tracking with Spring for ultra-smoothness
   const { scrollYProgress } = useScroll({
@@ -58,7 +61,9 @@ export default function ScrollCanvas() {
 
   useEffect(() => {
     const syncViewport = () => {
-      setIsMobile(window.innerWidth < 768);
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsSmallMobile(width <= 480);
     };
 
     syncViewport();
@@ -71,9 +76,8 @@ export default function ScrollCanvas() {
 
   useEffect(() => {
     let loadedCount = 0;
-    const frameIndexes = isMobile
-      ? FRAME_FILENAMES.map((_, index) => index).filter((index) => index % MOBILE_FRAME_STEP === 0)
-      : FRAME_FILENAMES.map((_, index) => index);
+    const frameStep = isSmallMobile ? SMALL_MOBILE_FRAME_STEP : isMobile ? MOBILE_FRAME_STEP : 1;
+    const frameIndexes = FRAME_FILENAMES.map((_, index) => index).filter((index) => index % frameStep === 0);
     const preloadedImages: HTMLImageElement[] = [];
 
     setLoaded(false);
@@ -99,7 +103,7 @@ export default function ScrollCanvas() {
       };
       preloadedImages[i] = img;
     });
-  }, [isMobile]);
+  }, [isMobile, isSmallMobile]);
 
   // 3. Canvas Rendering Logic
   useEffect(() => {
@@ -132,18 +136,21 @@ export default function ScrollCanvas() {
       const imgRatio = img.width / img.height;
       const canvasRatio = canvasWidth / canvasHeight;
 
-      let drawWidth, drawHeight, offsetX, offsetY;
+      let drawWidth: number;
+      let drawHeight: number;
+      let offsetX: number;
+      let offsetY: number;
 
       if (imgRatio > canvasRatio) {
         drawHeight = canvasHeight;
         drawWidth = canvasHeight * imgRatio;
-        offsetX = (canvasWidth - drawWidth) / (isMobile ? 1.7 : 2);
+        offsetX = (canvasWidth - drawWidth) / 2;
         offsetY = 0;
       } else {
         drawWidth = canvasWidth;
         drawHeight = canvasWidth / imgRatio;
         offsetX = 0;
-        offsetY = (canvasHeight - drawHeight) / (isMobile ? 3.2 : 2);
+        offsetY = (canvasHeight - drawHeight) / 2;
       }
 
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -192,7 +199,7 @@ export default function ScrollCanvas() {
       unsubscribe();
       window.removeEventListener("resize", handleResize);
     };
-  }, [activeFrameCount, isMobile, loaded, images, openingImage, scrollYProgress, smoothProgress]);
+  }, [activeFrameCount, isMobile, loaded, images, openingImage, scrollYProgress, smoothProgress, isSmallMobile]);
 
   // 4. Text Overlay logic
   const displayTexts = isMobile ? siteConfig.heroScrollTexts.slice(0, 5) : siteConfig.heroScrollTexts;
@@ -206,12 +213,20 @@ export default function ScrollCanvas() {
 
   // 5. Cinematic visuals (Scale & Blur)
   const progressSource = isMobile ? scrollYProgress : smoothProgress;
-  const scale = useTransform(progressSource, [0, 1], [1, isMobile ? 1.06 : 1.2]);
+  const scale = useTransform(progressSource, [0, 1], [1, isSmallMobile ? 1.01 : isMobile ? 1.03 : 1.2]);
 
   return (
     <div
       ref={containerRef}
-      style={{ height: isMobile ? MOBILE_SCROLL_HEIGHT : DESKTOP_SCROLL_HEIGHT, position: "relative", touchAction: "pan-y pinch-zoom" }}
+      style={{
+        height: isSmallMobile
+          ? SMALL_MOBILE_SCROLL_HEIGHT
+          : isMobile
+            ? MOBILE_SCROLL_HEIGHT
+            : DESKTOP_SCROLL_HEIGHT,
+        position: "relative",
+        touchAction: "pan-y pinch-zoom"
+      }}
       className="bg-dark"
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
@@ -240,7 +255,7 @@ export default function ScrollCanvas() {
           <ScrollText
             key={i}
             text={text}
-            scrollProgress={smoothProgress}
+            scrollProgress={progressSource}
             start={start}
             end={end}
             isOpeningFrame={i === 0}

@@ -58,7 +58,7 @@ export default function Navbar() {
              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white text-black rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-700 group-hover:rotate-[360deg] group-hover:bg-amber-500 z-10 flex-shrink-0">
                 <Coffee size={20} className="sm:w-6 sm:h-6" />
              </div>
-             <span className="text-base sm:text-xl lg:text-2xl font-playfair font-black text-white italic uppercase tracking-tight sm:tracking-tighter leading-none z-10 truncate">Aurora</span>
+             <span className="text-sm sm:text-xl lg:text-2xl font-playfair font-black text-white italic uppercase tracking-tight sm:tracking-tighter leading-none z-10 truncate">Aurora</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -79,11 +79,11 @@ export default function Navbar() {
              ))}
           </div>
 
-          <div className="relative z-20 flex items-center gap-1.5 sm:gap-3 lg:gap-6">
+          <div className="relative z-20 flex items-center gap-1 sm:gap-3 lg:gap-6">
             {/* Cart Button */}
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="relative min-h-[42px] min-w-[42px] sm:min-h-[44px] sm:min-w-[44px] p-2.5 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl sm:rounded-2xl text-white transition-all group"
+              className="relative min-h-[44px] min-w-[44px] p-2.5 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl sm:rounded-2xl text-white transition-all group"
             >
               <ShoppingBag size={18} className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
               {totalItems > 0 && (
@@ -100,8 +100,8 @@ export default function Navbar() {
                  onClick={() => setIsProfileOpen(!isProfileOpen)}
                  className={`flex items-center gap-2 rounded-[1.1rem] lg:rounded-[1.35rem] border transition-all ${
                    session
-                     ? 'bg-gradient-to-r from-white/6 via-white/4 to-amber-500/10 border-white/10 hover:border-amber-500/30 hover:bg-white/10 pl-1.5 pr-2 py-1.5 sm:pl-2 sm:pr-2.5 sm:py-2 lg:pr-3 shadow-[0_10px_40px_rgba(0,0,0,0.25)] min-h-[42px] sm:min-h-[44px]'
-                     : 'p-1.5 bg-white/5 border-white/10 rounded-xl sm:rounded-2xl hover:bg-white/10 min-h-[42px] sm:min-h-[44px]'
+                     ? 'bg-gradient-to-r from-white/6 via-white/4 to-amber-500/10 border-white/10 hover:border-amber-500/30 hover:bg-white/10 pl-1.5 pr-2 py-1.5 sm:pl-2 sm:pr-2.5 sm:py-2 lg:pr-3 shadow-[0_10px_40px_rgba(0,0,0,0.25)] min-h-[44px]'
+                     : 'p-1.5 bg-white/5 border-white/10 rounded-xl sm:rounded-2xl hover:bg-white/10 min-h-[44px]'
                  }`}
                >
                  <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-[12px] sm:rounded-[14px] bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-black shadow-xl overflow-hidden">
@@ -226,7 +226,7 @@ export default function Navbar() {
             </div>
 
             <button 
-              className="lg:hidden min-h-[42px] min-w-[42px] sm:min-h-[44px] sm:min-w-[44px] p-2.5 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl text-white"
+              className="lg:hidden min-h-[44px] min-w-[44px] p-2.5 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl text-white"
               onClick={() => setIsOpen(!isOpen)}
             >
               {isOpen ? <X size={18} className="sm:w-5 sm:h-5" /> : <MenuIcon size={18} className="sm:w-5 sm:h-5" />}
