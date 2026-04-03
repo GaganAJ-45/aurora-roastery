@@ -55,10 +55,10 @@ export default function Navbar() {
           
           <Link href="/" className="relative z-20 flex items-center gap-2 sm:gap-3 group min-w-0">
              <div className="pointer-events-none absolute inset-0 bg-amber-500/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-             <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white text-black rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-700 group-hover:rotate-[360deg] group-hover:bg-amber-500 z-10 flex-shrink-0">
-                <Coffee size={20} className="sm:w-6 sm:h-6" />
+             <div className="w-10 h-10 sm:w-10 sm:h-10 bg-white text-black rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-700 group-hover:rotate-[360deg] group-hover:bg-amber-500 z-10 flex-shrink-0">
+                <Coffee size={22} className="sm:w-6 sm:h-6" />
              </div>
-             <span className="text-sm sm:text-xl lg:text-2xl font-playfair font-black text-white italic uppercase tracking-tight sm:tracking-tighter leading-none z-10 truncate">Aurora</span>
+             <span className="text-base sm:text-xl lg:text-2xl font-playfair font-black text-white italic uppercase tracking-tight sm:tracking-tighter leading-none z-10 truncate">Aurora</span>
           </Link>
 
           {/* Desktop Nav */}

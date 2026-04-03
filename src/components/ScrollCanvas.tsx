@@ -8,11 +8,28 @@ import { FRAME_FILENAMES } from "@/config/frames";
 const FRAME_COUNT = FRAME_FILENAMES.length;
 const OPENING_HERO_SRC = "/hero_coffee.png";
 const OPENING_SEGMENT_END = 1 / siteConfig.heroScrollTexts.length;
-const MOBILE_FRAME_STEP = 4;
-const SMALL_MOBILE_FRAME_STEP = 6;
+const SMALL_MOBILE_FRAME_COUNT = 72;
+const MOBILE_FRAME_COUNT = 96;
 const MOBILE_SCROLL_HEIGHT = "320vh";
 const SMALL_MOBILE_SCROLL_HEIGHT = "260vh";
 const DESKTOP_SCROLL_HEIGHT = "500vh";
+const LOW_END_DEVICE_MEMORY_GB = 4;
+const LOW_END_DEVICE_CORES = 6;
+
+function sampleFrameIndexes(total: number, targetCount: number) {
+  if (targetCount >= total) {
+    return Array.from({ length: total }, (_, i) => i);
+  }
+
+  const indexes: number[] = [];
+  const stride = (total - 1) / (targetCount - 1);
+
+  for (let i = 0; i < targetCount; i++) {
+    indexes.push(Math.round(i * stride));
+  }
+
+  return [...new Set(indexes)];
+}
 
 function getMobileScrollText(text: string) {
   const mobileMap: Record<string, string> = {
@@ -38,6 +55,8 @@ export default function ScrollCanvas() {
   const [loaded, setLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSmallMobile, setIsSmallMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [useLightMobileMode, setUseLightMobileMode] = useState(false);
 
   // 1. Scroll tracking with Spring for ultra-smoothness
   const { scrollYProgress } = useScroll({
@@ -64,6 +83,14 @@ export default function ScrollCanvas() {
       const width = window.innerWidth;
       setIsMobile(width < 768);
       setIsSmallMobile(width <= 480);
+      setIsTablet(width >= 768 && width < 1024);
+
+      const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+      const cpuCores = navigator.hardwareConcurrency ?? 8;
+      const lowMemory = typeof deviceMemory === "number" ? deviceMemory <= LOW_END_DEVICE_MEMORY_GB : false;
+      const lowCpu = cpuCores <= LOW_END_DEVICE_CORES;
+
+      setUseLightMobileMode(width < 768 && (lowMemory || lowCpu));
     };
 
     syncViewport();
@@ -75,9 +102,20 @@ export default function ScrollCanvas() {
   }, []);
 
   useEffect(() => {
+    if (useLightMobileMode) {
+      setImages([]);
+      setActiveFrameCount(0);
+      setLoaded(!!openingImage);
+      return;
+    }
+
     let loadedCount = 0;
-    const frameStep = isSmallMobile ? SMALL_MOBILE_FRAME_STEP : isMobile ? MOBILE_FRAME_STEP : 1;
-    const frameIndexes = FRAME_FILENAMES.map((_, index) => index).filter((index) => index % frameStep === 0);
+    const targetCount = isMobile
+      ? (isSmallMobile ? SMALL_MOBILE_FRAME_COUNT : MOBILE_FRAME_COUNT)
+      : isTablet
+        ? 120
+        : FRAME_COUNT;
+    const frameIndexes = sampleFrameIndexes(FRAME_COUNT, targetCount);
     const preloadedImages: HTMLImageElement[] = [];
 
     setLoaded(false);
@@ -103,30 +141,35 @@ export default function ScrollCanvas() {
       };
       preloadedImages[i] = img;
     });
-  }, [isMobile, isSmallMobile]);
+  }, [isMobile, isSmallMobile, isTablet, useLightMobileMode, openingImage]);
 
   // 3. Canvas Rendering Logic
   useEffect(() => {
-    if (!loaded || !canvasRef.current || images.length === 0) return;
+    if (!loaded || !canvasRef.current) return;
+    if (!useLightMobileMode && images.length === 0) return;
+    if (useLightMobileMode && !openingImage) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const renderFrame = (progress: number) => {
-      const useOpeningImage = progress <= OPENING_SEGMENT_END && openingImage;
-      const frameIndex = Math.min(
-        activeFrameCount - 1,
-        Math.floor(progress * activeFrameCount)
-      );
+      const useOpeningFrame = progress <= OPENING_SEGMENT_END && openingImage;
+      const frameIndex = activeFrameCount > 0
+        ? Math.min(activeFrameCount - 1, Math.floor(progress * activeFrameCount))
+        : 0;
 
-      const img = useOpeningImage ? openingImage : images[frameIndex];
+      const img = useLightMobileMode
+        ? openingImage
+        : useOpeningFrame
+          ? openingImage
+          : images[frameIndex];
       if (!img) return;
 
       // Full screen (h-screen w-full)
       const canvasWidth = window.innerWidth;
       const canvasHeight = window.innerHeight;
-      const dpr = isMobile ? 1 : Math.min(2, window.devicePixelRatio || 1);
+      const dpr = isMobile ? 0.85 : Math.min(2, window.devicePixelRatio || 1);
       canvas.width = Math.floor(canvasWidth * dpr);
       canvas.height = Math.floor(canvasHeight * dpr);
       canvas.style.width = `${canvasWidth}px`;
@@ -153,6 +196,11 @@ export default function ScrollCanvas() {
         offsetY = (canvasHeight - drawHeight) / 2;
       }
 
+      if (useLightMobileMode) {
+        const maxDrift = canvasHeight * 0.08;
+        offsetY -= progress * maxDrift;
+      }
+
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
@@ -162,8 +210,8 @@ export default function ScrollCanvas() {
 
       if (isMobile) {
         const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight * 0.75);
-        gradient.addColorStop(0, "rgba(10, 7, 5, 0.14)");
-        gradient.addColorStop(0.35, "rgba(10, 7, 5, 0.06)");
+        gradient.addColorStop(0, useLightMobileMode ? "rgba(10, 7, 5, 0.26)" : "rgba(10, 7, 5, 0.14)");
+        gradient.addColorStop(0.35, useLightMobileMode ? "rgba(10, 7, 5, 0.12)" : "rgba(10, 7, 5, 0.06)");
         gradient.addColorStop(1, "rgba(10, 7, 5, 0.62)");
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -199,7 +247,7 @@ export default function ScrollCanvas() {
       unsubscribe();
       window.removeEventListener("resize", handleResize);
     };
-  }, [activeFrameCount, isMobile, loaded, images, openingImage, scrollYProgress, smoothProgress, isSmallMobile]);
+  }, [activeFrameCount, isMobile, loaded, images, openingImage, scrollYProgress, smoothProgress, isSmallMobile, useLightMobileMode]);
 
   // 4. Text Overlay logic
   const displayTexts = isMobile ? siteConfig.heroScrollTexts.slice(0, 5) : siteConfig.heroScrollTexts;
@@ -213,7 +261,11 @@ export default function ScrollCanvas() {
 
   // 5. Cinematic visuals (Scale & Blur)
   const progressSource = isMobile ? scrollYProgress : smoothProgress;
-  const scale = useTransform(progressSource, [0, 1], [1, isSmallMobile ? 1.01 : isMobile ? 1.03 : 1.2]);
+  const scale = useTransform(
+    progressSource,
+    [0, 1],
+    [1, useLightMobileMode ? 1.015 : isSmallMobile ? 1.01 : isMobile ? 1.03 : 1.2]
+  );
 
   return (
     <div
@@ -225,11 +277,11 @@ export default function ScrollCanvas() {
             ? MOBILE_SCROLL_HEIGHT
             : DESKTOP_SCROLL_HEIGHT,
         position: "relative",
-        touchAction: "pan-y pinch-zoom"
+        touchAction: "pan-y"
       }}
-      className="bg-dark"
+      className="bg-dark touch-pan-y"
     >
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center touch-pan-y" style={{ touchAction: "pan-y" }}>
         {!loaded && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-dark">
             {/* Spinner fallback */}
@@ -245,7 +297,7 @@ export default function ScrollCanvas() {
           ref={canvasRef}
           id="hero-canvas"
           style={{ scale }}
-          className="absolute inset-0 w-full h-full object-cover z-0 origin-center"
+          className="absolute inset-0 w-full h-full object-cover z-0 origin-center touch-pan-y"
         />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black via-black/70 to-transparent z-[9]" />
