@@ -8,6 +8,9 @@ import { FRAME_FILENAMES } from "@/config/frames";
 const FRAME_COUNT = FRAME_FILENAMES.length;
 const OPENING_HERO_SRC = "/hero_coffee.png";
 const OPENING_SEGMENT_END = 1 / siteConfig.heroScrollTexts.length;
+const MOBILE_FRAME_STEP = 4;
+const MOBILE_SCROLL_HEIGHT = "320vh";
+const DESKTOP_SCROLL_HEIGHT = "500vh";
 
 function getMobileScrollText(text: string) {
   const mobileMap: Record<string, string> = {
@@ -28,6 +31,7 @@ export default function ScrollCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [images, setImages] = useState<HTMLImageElement[]>([]);
+  const [activeFrameCount, setActiveFrameCount] = useState(FRAME_COUNT);
   const [openingImage, setOpeningImage] = useState<HTMLImageElement | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -46,37 +50,10 @@ export default function ScrollCanvas() {
 
   // 2. Preload/Retrieve images (they'll be in browser cache from LoadingScreen)
   useEffect(() => {
-    let loadedCount = 0;
-    const preloadedImages: HTMLImageElement[] = [];
     const openingImg = new Image();
-
     openingImg.src = OPENING_HERO_SRC;
     openingImg.onload = () => setOpeningImage(openingImg);
     openingImg.onerror = () => setOpeningImage(null);
-
-    const loadImages = () => {
-      FRAME_FILENAMES.forEach((filename, i) => {
-        const img = new Image();
-        img.src = `/frames/${filename}`;
-        img.onload = () => {
-          loadedCount++;
-          if (loadedCount === FRAME_COUNT) {
-            setImages(preloadedImages);
-            setLoaded(true);
-          }
-        };
-        img.onerror = () => {
-          loadedCount++;
-          if (loadedCount === FRAME_COUNT) {
-            setImages(preloadedImages);
-            setLoaded(true);
-          }
-        };
-        preloadedImages[i] = img;
-      });
-    };
-
-    loadImages();
   }, []);
 
   useEffect(() => {
@@ -92,6 +69,38 @@ export default function ScrollCanvas() {
     };
   }, []);
 
+  useEffect(() => {
+    let loadedCount = 0;
+    const frameIndexes = isMobile
+      ? FRAME_FILENAMES.map((_, index) => index).filter((index) => index % MOBILE_FRAME_STEP === 0)
+      : FRAME_FILENAMES.map((_, index) => index);
+    const preloadedImages: HTMLImageElement[] = [];
+
+    setLoaded(false);
+
+    frameIndexes.forEach((frameIndex, i) => {
+      const img = new Image();
+      img.src = `/frames/${FRAME_FILENAMES[frameIndex]}`;
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === frameIndexes.length) {
+          setImages(preloadedImages);
+          setActiveFrameCount(preloadedImages.length);
+          setLoaded(true);
+        }
+      };
+      img.onerror = () => {
+        loadedCount++;
+        if (loadedCount === frameIndexes.length) {
+          setImages(preloadedImages);
+          setActiveFrameCount(preloadedImages.length);
+          setLoaded(true);
+        }
+      };
+      preloadedImages[i] = img;
+    });
+  }, [isMobile]);
+
   // 3. Canvas Rendering Logic
   useEffect(() => {
     if (!loaded || !canvasRef.current || images.length === 0) return;
@@ -103,8 +112,8 @@ export default function ScrollCanvas() {
     const renderFrame = (progress: number) => {
       const useOpeningImage = progress <= OPENING_SEGMENT_END && openingImage;
       const frameIndex = Math.min(
-        FRAME_COUNT - 1,
-        Math.floor(progress * FRAME_COUNT)
+        activeFrameCount - 1,
+        Math.floor(progress * activeFrameCount)
       );
 
       const img = useOpeningImage ? openingImage : images[frameIndex];
@@ -113,8 +122,12 @@ export default function ScrollCanvas() {
       // Full screen (h-screen w-full)
       const canvasWidth = window.innerWidth;
       const canvasHeight = window.innerHeight;
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
+      const dpr = isMobile ? 1 : Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(canvasWidth * dpr);
+      canvas.height = Math.floor(canvasHeight * dpr);
+      canvas.style.width = `${canvasWidth}px`;
+      canvas.style.height = `${canvasHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const imgRatio = img.width / img.height;
       const canvasRatio = canvasWidth / canvasHeight;
@@ -150,27 +163,41 @@ export default function ScrollCanvas() {
       }
     };
 
-    // Initial render
-    renderFrame(smoothProgress.get());
+    const progressSource = isMobile ? scrollYProgress : smoothProgress;
+    let ticking = false;
+    let latestProgress = progressSource.get();
 
-    // Listen to scroll changes
-    const unsubscribe = smoothProgress.on("change", (latest) => {
-      renderFrame(latest);
+    const paint = () => {
+      ticking = false;
+      renderFrame(latestProgress);
+    };
+
+    // Initial render
+    renderFrame(latestProgress);
+
+    // Listen to scroll changes and paint via RAF for smoother touch scrolling
+    const unsubscribe = progressSource.on("change", (latest) => {
+      latestProgress = latest;
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(paint);
+      }
     });
 
     // Handle resize
-    const handleResize = () => renderFrame(smoothProgress.get());
+    const handleResize = () => renderFrame(progressSource.get());
     window.addEventListener("resize", handleResize);
 
     return () => {
       unsubscribe();
       window.removeEventListener("resize", handleResize);
     };
-  }, [isMobile, loaded, images, openingImage, smoothProgress]);
+  }, [activeFrameCount, isMobile, loaded, images, openingImage, scrollYProgress, smoothProgress]);
 
   // 4. Text Overlay logic
-  const textSegments = siteConfig.heroScrollTexts.map((text, i) => {
-    const total = siteConfig.heroScrollTexts.length;
+  const displayTexts = isMobile ? siteConfig.heroScrollTexts.slice(0, 5) : siteConfig.heroScrollTexts;
+  const textSegments = displayTexts.map((text, i) => {
+    const total = displayTexts.length;
     const segSize = 1 / total;
     const start = i * segSize;
     const end = (i + 1) * segSize;
@@ -178,12 +205,13 @@ export default function ScrollCanvas() {
   });
 
   // 5. Cinematic visuals (Scale & Blur)
-  const scale = useTransform(smoothProgress, [0, 1], [1, 1.2]);
+  const progressSource = isMobile ? scrollYProgress : smoothProgress;
+  const scale = useTransform(progressSource, [0, 1], [1, isMobile ? 1.06 : 1.2]);
 
   return (
     <div
       ref={containerRef}
-      style={{ height: "500vh", position: "relative" }}
+      style={{ height: isMobile ? MOBILE_SCROLL_HEIGHT : DESKTOP_SCROLL_HEIGHT, position: "relative", touchAction: "pan-y pinch-zoom" }}
       className="bg-dark"
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
@@ -204,6 +232,8 @@ export default function ScrollCanvas() {
           style={{ scale }}
           className="absolute inset-0 w-full h-full object-cover z-0 origin-center"
         />
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black via-black/70 to-transparent z-[9]" />
 
         {/* Hero Text Overlays */}
         {textSegments.map(({ text, start, end }, i) => (
